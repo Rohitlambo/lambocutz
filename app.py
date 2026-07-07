@@ -1,16 +1,15 @@
 from flask import Flask, render_template, request, jsonify
-import sqlite3
 import os
 from datetime import datetime
 
 app = Flask(__name__)
-DB = 'database.db'
 
 # ─── DATABASE SETUP ──────────────────────────────────────────────────────────
 
 def get_db():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
+    import psycopg2
+    import psycopg2.extras
+    conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
     return conn
 
 def init_db():
@@ -19,7 +18,7 @@ def init_db():
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            id          SERIAL PRIMARY KEY,
             name        TEXT NOT NULL,
             phone       TEXT NOT NULL,
             date        TEXT NOT NULL,
@@ -40,9 +39,9 @@ def init_db():
     ''')
 
     # Default settings
-    c.execute("INSERT OR IGNORE INTO settings VALUES ('start_hour', '10')")
-    c.execute("INSERT OR IGNORE INTO settings VALUES ('end_hour', '18')")
-    c.execute("INSERT OR IGNORE INTO settings VALUES ('available_dates', '')")
+    c.execute("INSERT INTO settings VALUES ('start_hour', '10') ON CONFLICT (key) DO NOTHING")
+    c.execute("INSERT INTO settings VALUES ('end_hour', '18') ON CONFLICT (key) DO NOTHING")
+    c.execute("INSERT INTO settings VALUES ('available_dates', '') ON CONFLICT (key) DO NOTHING")
 
     conn.commit()
     conn.close()
@@ -51,13 +50,16 @@ def init_db():
 
 def get_setting(key):
     conn = get_db()
-    row = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    c = conn.cursor()
+    c.execute("SELECT value FROM settings WHERE key=%s", (key,))
+    row = c.fetchone()
     conn.close()
-    return row['value'] if row else None
+    return row[0] if row else None
 
 def set_setting(key, value):
     conn = get_db()
-    conn.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", (key, value))
+    c = conn.cursor()
+    c.execute("INSERT INTO settings VALUES (%s,%s) ON CONFLICT (key) DO UPDATE SET value=%s", (key, value, value))
     conn.commit()
     conn.close()
 
@@ -90,15 +92,16 @@ def api_get_slots():
     start = int(get_setting('start_hour') or 10)
     end   = int(get_setting('end_hour') or 18)
 
-    # Get booked slots for this date
     conn = get_db()
-    booked = conn.execute(
-        "SELECT time FROM bookings WHERE date=? AND status != 'cancelled'",
+    c = conn.cursor()
+    c.execute(
+        "SELECT time FROM bookings WHERE date=%s AND status != 'cancelled'",
         (date,)
-    ).fetchall()
+    )
+    booked = c.fetchall()
     conn.close()
 
-    booked_times = [row['time'] for row in booked]
+    booked_times = [row[0] for row in booked]
 
     all_slots = []
     for h in range(start, end):
@@ -119,32 +122,30 @@ def api_book():
     date  = data.get('date', '').strip()
     time  = data.get('time', '').strip()
 
-    # Validation
     if not all([name, phone, date, time]):
         return jsonify({'error': 'All fields required'}), 400
 
-    # Check date is available
     available_dates = get_available_dates()
     if date not in available_dates:
         return jsonify({'error': 'Date not available'}), 400
 
-    # Check slot not taken
     conn = get_db()
-    conflict = conn.execute(
-        "SELECT id FROM bookings WHERE date=? AND time=? AND status != 'cancelled'",
+    c = conn.cursor()
+    c.execute(
+        "SELECT id FROM bookings WHERE date=%s AND time=%s AND status != 'cancelled'",
         (date, time)
-    ).fetchone()
+    )
+    conflict = c.fetchone()
 
     if conflict:
         conn.close()
         return jsonify({'error': 'Slot already taken'}), 409
 
-    # Insert booking
-    cursor = conn.execute(
-        "INSERT INTO bookings (name, phone, date, time) VALUES (?,?,?,?)",
+    c.execute(
+        "INSERT INTO bookings (name, phone, date, time) VALUES (%s,%s,%s,%s) RETURNING id",
         (name, phone, date, time)
     )
-    booking_id = cursor.lastrowid
+    booking_id = c.fetchone()[0]
     conn.commit()
     conn.close()
 
@@ -168,26 +169,28 @@ def admin():
 @app.route('/api/admin/bookings', methods=['GET'])
 def api_admin_bookings():
     conn = get_db()
-    rows = conn.execute(
-        "SELECT * FROM bookings ORDER BY date ASC, time ASC"
-    ).fetchall()
+    c = conn.cursor()
+    c.execute("SELECT * FROM bookings ORDER BY date ASC, time ASC")
+    rows = c.fetchall()
+    cols = [desc[0] for desc in c.description]
     conn.close()
-    return jsonify([dict(r) for r in rows])
+    return jsonify([dict(zip(cols, row)) for row in rows])
 
 @app.route('/api/admin/booking/<int:booking_id>', methods=['PATCH'])
 def api_update_booking(booking_id):
     data = request.get_json()
     conn = get_db()
+    c = conn.cursor()
 
     if 'status' in data:
-        conn.execute(
-            "UPDATE bookings SET status=? WHERE id=?",
+        c.execute(
+            "UPDATE bookings SET status=%s WHERE id=%s",
             (data['status'], booking_id)
         )
 
     if 'payment' in data:
-        conn.execute(
-            "UPDATE bookings SET payment=? WHERE id=?",
+        c.execute(
+            "UPDATE bookings SET payment=%s WHERE id=%s",
             (data['payment'], booking_id)
         )
 
@@ -198,7 +201,8 @@ def api_update_booking(booking_id):
 @app.route('/api/admin/booking/<int:booking_id>', methods=['DELETE'])
 def api_delete_booking(booking_id):
     conn = get_db()
-    conn.execute("DELETE FROM bookings WHERE id=?", (booking_id,))
+    c = conn.cursor()
+    c.execute("DELETE FROM bookings WHERE id=%s", (booking_id,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -219,18 +223,16 @@ def api_save_settings():
 @app.route('/api/admin/clear', methods=['POST'])
 def api_clear_bookings():
     conn = get_db()
-    conn.execute("DELETE FROM bookings")
+    c = conn.cursor()
+    c.execute("DELETE FROM bookings")
     conn.commit()
     conn.close()
     return jsonify({'success': True})
 
 # ─── RUN ─────────────────────────────────────────────────────────────────────
 
-# ─── RUN ─────────────────────────────────────────────────────────────────────
-
-init_db()  # ← Move this here (always runs)
+init_db()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
