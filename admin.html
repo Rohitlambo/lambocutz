@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lambocutz — Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px 20px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    header h1 { font-size: 2rem; font-weight: 900; letter-spacing: 4px; }
+    header h1 span { color: #FFD700; }
+    header p { color: #FFD700; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 35px;
+    }
+
+    .stat-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card .number { font-size: 2rem; font-weight: 900; color: #FFD700; }
+    .stat-card .label { font-size: 0.75rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase; margin-top: 5px; }
+
+    .section-title {
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #FFD700;
+      margin-bottom: 15px;
+      margin-top: 35px;
+    }
+
+    .availability-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 25px;
+    }
+
+    .hours-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .hours-row label { font-size: 0.8rem; color: #aaa; letter-spacing: 1px; }
+
+    .hours-row select {
+      padding: 10px 14px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .hours-row select:focus { border-color: #FFD700; }
+
+    .save-hours-btn {
+      padding: 10px 20px;
+      background: #FFD700;
+      color: #000;
+      font-weight: 800;
+      font-size: 0.82rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+
+    .save-hours-btn:hover { background: #e6c200; }
+
+    .add-date-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .add-date-row input[type="date"] {
+      padding: 12px 16px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .add-date-row input[type="date"]:focus { border-color: #FFD700; }
+
+    .add-btn {
+      padding: 12px 24px;
+      background: #FFD700;
+      color: #000;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover { background: #e6c200; }
+
+    .date-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+
+    .date-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+
+    .chip-date { color: #fff; }
+    .chip-slots { color: #FFD700; font-size: 0.75rem; }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #ff4444;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .remove-btn:hover { color: #ff0000; }
+    .no-dates { color: #444; font-size: 0.9rem; padding: 10px 0; }
+
+    .booking-filters { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+
+    .filter-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border: 1px solid #333;
+      background: #1e1e1e;
+      color: #aaa;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active { background: #FFD700; color: #000; border-color: #FFD700; }
+
+    .booking-card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .booking-card.cancelled { opacity: 0.4; border-color: #ff444422; }
+    .booking-card.done { border-color: #00cc6622; }
+
+    .booking-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .booking-info p { font-size: 0.82rem; color: #aaa; margin-bottom: 4px; }
+    .booking-info p span { color: #fff; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+      margin-right: 4px;
+    }
+
+    .badge-confirmed { background: #1a3a5c; color: #5bb8ff; }
+    .badge-done { background: #0d2e1a; color: #00cc66; }
+    .badge-cancelled { background: #2e0d0d; color: #ff4444; }
+    .badge-paid { background: #2e2500; color: #FFD700; }
+    .badge-unpaid { background: #1a1a1a; color: #666; }
+
+    .booking-actions { display: flex; flex-direction: column; gap: 8px; min-width: 120px; }
+
+    .action-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      letter-spacing: 0.5px;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover { opacity: 0.8; }
+    .btn-paid { background: #FFD700; color: #000; }
+    .btn-done { background: #00cc66; color: #000; }
+    .btn-cancel { background: #1e1e1e; color: #ff4444; border: 1px solid #333; }
+
+    .no-bookings { text-align: center; color: #444; padding: 40px 20px; font-size: 0.9rem; }
+
+    .danger-zone { margin-top: 50px; border: 1px solid #2e0d0d; border-radius: 12px; padding: 20px; }
+    .danger-zone h3 { color: #ff4444; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+
+    .danger-btn {
+      padding: 10px 20px;
+      background: #2e0d0d;
+      color: #ff4444;
+      border: 1px solid #ff444433;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .danger-btn:hover { background: #3e1010; }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #FFD700;
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>LAMBO<span>CUTZ</span></h1>
+    <p>⚙️ Admin Dashboard</p>
+  </header>
+
+  <div class="container">
+
+    <div class="stats" id="statsRow"></div>
+
+    <!-- AVAILABILITY -->
+    <p class="section-title">📅 Manage Availability</p>
+    <div class="availability-card">
+
+      <div class="hours-row">
+        <label>START</label>
+        <select id="startHour"></select>
+        <label>END</label>
+        <select id="endHour"></select>
+        <button class="save-hours-btn" onclick="saveHours()">Save Hours</button>
+        <span style="color:#aaa; font-size:0.8rem;">1 hr slots</span>
+      </div>
+
+      <div class="add-date-row">
+        <input type="date" id="newDate"/>
+        <button class="add-btn" onclick="addDate()">+ Add Day</button>
+      </div>
+
+      <div class="date-chips" id="dateChips"></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <p class="section-title">📋 Bookings</p>
+
+    <div class="booking-filters">
+      <button class="filter-btn active" onclick="filterBookings('all', this)">All</button>
+      <button class="filter-btn" onclick="filterBookings('confirmed', this)">Confirmed</button>
+      <button class="filter-btn" onclick="filterBookings('done', this)">Done</button>
+      <button class="filter-btn" onclick="filterBookings('cancelled', this)">Cancelled</button>
+    </div>
+
+    <div id="bookingsList"></div>
+
+    <div class="danger-zone">
+      <h3>⚠️ Danger Zone</h3>
+      <button class="danger-btn" onclick="clearAllBookings()">Clear All Bookings</button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let allBookings = [];
+    let currentFilter = 'all';
+    let settings = {};
+
+    // ─── INIT ────────────────────────────────────────────────────────────
+    async function init() {
+      populateHourDropdowns();
+      await loadSettings();
+      await loadBookings();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    // ─── SETTINGS ────────────────────────────────────────────────────────
+    async function loadSettings() {
+      const res = await fetch('/api/settings');
+      settings = await res.json();
+      document.getElementById('startHour').value = settings.start_hour;
+      document.getElementById('endHour').value = settings.end_hour;
+      renderDateChips();
+    }
+
+    function populateHourDropdowns() {
+      const startSel = document.getElementById('startHour');
+      const endSel   = document.getElementById('endHour');
+      for (let h = 7; h <= 22; h++) {
+        const label = formatHourLabel(h);
+        startSel.innerHTML += `<option value="${h}">${label}</option>`;
+        endSel.innerHTML   += `<option value="${h}">${label}</option>`;
+      }
+    }
+
+    function formatHourLabel(h) {
+      const suffix  = h >= 12 ? 'PM' : 'AM';
+      const display = h > 12 ? h - 12 : h;
+      return `${display}:00 ${suffix}`;
+    }
+
+    async function saveHours() {
+      const start = parseInt(document.getElementById('startHour').value);
+      const end   = parseInt(document.getElementById('endHour').value);
+      if (start >= end) { alert('Start must be before end!'); return; }
+
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_hour: start, end_hour: end })
+      });
+
+      settings.start_hour = start;
+      settings.end_hour   = end;
+      showToast('✅ Hours saved!');
+      renderDateChips();
+    }
+
+    // ─── DATES ───────────────────────────────────────────────────────────
+    async function addDate() {
+      const input   = document.getElementById('newDate');
+      const dateStr = input.value;
+      if (!dateStr) { alert('Pick a date!'); return; }
+
+      const day = new Date(dateStr + 'T00:00:00').getDay();
+      if (day === 0 || day === 6) { alert('Weekdays only! (Mon–Fri)'); return; }
+
+      const dates = settings.available_dates || [];
+      if (dates.includes(dateStr)) { alert('Date already added!'); return; }
+
+      dates.push(dateStr);
+      dates.sort();
+
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available_dates: dates })
+      });
+
+      settings.available_dates = dates;
+      input.value = '';
+      renderDateChips();
+      renderStats();
+      showToast('📅 Date added!');
+    }
+
+    async function removeDate(dateStr) {
+      const hasActive = allBookings.some(b =>
+        b.date === dateStr && b.status !== 'cancelled'
+      );
+      if (hasActive && !confirm('Active bookings exist on this day. Remove anyway?')) return;
+
+      const dates = (settings.available_dates || []).filter(d => d !== dateStr);
+
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available_dates: dates })
+      });
+
+      settings.available_dates = dates;
+      renderDateChips();
+      renderStats();
+      showToast('🗑️ Date removed!');
+    }
+
+    function getSlotsInfo(dateStr) {
+      const total  = (settings.end_hour || 18) - (settings.start_hour || 10);
+      const booked = allBookings.filter(b =>
+        b.date === dateStr && b.status !== 'cancelled'
+      ).length;
+      return { total, booked, free: total - booked };
+    }
+
+    function renderDateChips() {
+      const dates     = settings.available_dates || [];
+      const container = document.getElementById('dateChips');
+      const today     = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (dates.length === 0) {
+        container.innerHTML = '<p class="no-dates">No dates added yet.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      dates.forEach(dateStr => {
+        const date   = new Date(dateStr + 'T00:00:00');
+        const isPast = date < today;
+        const info   = getSlotsInfo(dateStr);
+        const dayName = date.toLocaleDateString('en-SG', { weekday: 'short' });
+        const dateFmt = date.toLocaleDateString('en-SG', { day: 'numeric', month: 'short' });
+
+        const chip = document.createElement('div');
+        chip.className = 'date-chip';
+        chip.style.opacity = isPast ? '0.4' : '1';
+        chip.innerHTML = `
+          <span class="chip-date">${dayName}, ${dateFmt}</span>
+          <span class="chip-slots">${info.free}/${info.total} free</span>
+          <button class="remove-btn" onclick="removeDate('${dateStr}')">✕</button>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    // ─── BOOKINGS ─────────────────────────────────────────────────────────
+    async function loadBookings() {
+      const res   = await fetch('/api/admin/bookings');
+      allBookings = await res.json();
+      renderStats();
+      renderBookings();
+      renderDateChips();
+    }
+
+    function renderStats() {
+      const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
+      const done      = allBookings.filter(b => b.status === 'done').length;
+      const paid      = allBookings.filter(b => b.payment === 'paid').length;
+      const revenue   = allBookings
+        .filter(b => b.payment === 'paid')
+        .reduce((s, b) => s + b.price, 0);
+
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-card"><div class="number">${confirmed}</div><div class="label">Upcoming</div></div>
+        <div class="stat-card"><div class="number">${done}</div><div class="label">Completed</div></div>
+        <div class="stat-card"><div class="number">${paid}</div><div class="label">Paid</div></div>
+        <div class="stat-card"><div class="number">$${revenue}</div><div class="label">Revenue</div></div>
+      `;
+    }
+
+    function filterBookings(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderBookings();
+    }
+
+    function formatTimeDisplay(timeStr) {
+      const h       = parseInt(timeStr);
+      const suffix  = h >= 12 ? 'PM' : 'AM';
+      const display = h > 12 ? h - 12 : h;
+      const nextH   = h + 1 > 12 ? h + 1 - 12 : h + 1;
+      const nextSuf = h + 1 >= 12 ? 'PM' : 'AM';
+      return `${display}:00 ${suffix} – ${nextH}:00 ${nextSuf}`;
+    }
+
+    function renderBookings() {
+      let bookings = [...allBookings];
+      if (currentFilter !== 'all') {
+        bookings = bookings.filter(b => b.status === currentFilter);
+      }
+
+      const container = document.getElementById('bookingsList');
+      if (bookings.length === 0) {
+        container.innerHTML = '<div class="no-bookings">No bookings found 📭</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      bookings.forEach(b => {
+        const card = document.createElement('div');
+        card.className = `booking-card ${b.status}`;
+
+        const dateDisplay = new Date(b.date + 'T00:00:00').toLocaleDateString('en-SG', {
+          weekday: 'short', day: 'numeric', month: 'short'
+        });
+
+        card.innerHTML = `
+          <div class="booking-info">
+            <h3>${b.name}</h3>
+            <p>📱 <span>${b.phone}</span></p>
+            <p>📅 <span>${dateDisplay}</span> &nbsp; 🕐 <span>${formatTimeDisplay(b.time)}</span></p>
+            <p>✂️ <span>${b.service} — $${b.price}</span></p>
+            <div style="margin-top:8px;">
+              <span class="status-badge badge-${b.status}">${b.status}</span>
+              <span class="status-badge badge-${b.payment}">${b.payment}</span>
+            </div>
+          </div>
+          <div class="booking-actions">
+            ${b.payment !== 'paid' && b.status !== 'cancelled'
+              ? `<button class="action-btn btn-paid" onclick="markPaid(${b.id})">💰 Mark Paid</button>`
+              : ''}
+            ${b.status === 'confirmed'
+              ? `<button class="action-btn btn-done" onclick="markDone(${b.id})">✅ Done</button>`
+              : ''}
+            ${b.status !== 'cancelled'
+              ? `<button class="action-btn btn-cancel" onclick="cancelBooking(${b.id})">✕ Cancel</button>`
+              : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ─── ACTIONS ─────────────────────────────────────────────────────────
+    async function markPaid(id) {
+      await fetch(`/api/admin/booking/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment: 'paid' })
+      });
+      await loadBookings();
+      showToast('💰 Marked as paid!');
+    }
+
+    async function markDone(id) {
+      await fetch(`/api/admin/booking/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'done' })
+      });
+      await loadBookings();
+      showToast('✅ Marked as done!');
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Cancel this booking?')) return;
+      await fetch(`/api/admin/booking/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
+      await loadBookings();
+      showToast('❌ Booking cancelled!');
+    }
+
+    async function clearAllBookings() {
+      if (!confirm('Clear ALL bookings? Cannot be undone!')) return;
+      await fetch('/api/admin/clear', { method: 'POST' });
+      await loadBookings();
+      showToast('🗑️ All bookings cleared!');
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

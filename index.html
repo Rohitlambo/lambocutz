@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lambocutz</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      padding: 50px 20px 30px;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #fff;
+    }
+
+    header h1 span {
+      color: #FFD700;
+    }
+
+    header p {
+      color: #aaa;
+      margin-top: 8px;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      width: 60px;
+      height: 3px;
+      background: #FFD700;
+      margin: 15px auto;
+    }
+
+    /* BOOKING SECTION */
+    .booking-container {
+      max-width: 500px;
+      margin: 20px auto 60px;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 35px;
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 25px;
+      color: #FFD700;
+      letter-spacing: 1px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px 16px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: #FFD700;
+    }
+
+    select option {
+      background: #1e1e1e;
+    }
+
+    .service-box {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .service-box span:last-child {
+      color: #FFD700;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: #FFD700;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: #e6c200;
+      transform: scale(1.01);
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    /* CONFIRMATION */
+    .confirmation {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .confirmation .checkmark {
+      font-size: 4rem;
+      margin-bottom: 15px;
+    }
+
+    .confirmation h2 {
+      font-size: 1.5rem;
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+
+    .confirmation p {
+      color: #aaa;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .confirmation .booking-details {
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .confirmation .booking-details p {
+      color: #fff;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .confirmation .booking-details p span {
+      color: #FFD700;
+      font-weight: 600;
+    }
+
+    .payment-section {
+      margin-top: 20px;
+    }
+
+    .payment-section h3 {
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+
+    .payment-options {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .payment-btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      letter-spacing: 1px;
+      transition: opacity 0.2s;
+    }
+
+    .payment-btn:hover {
+      opacity: 0.85;
+    }
+
+    .cash-btn {
+      background: #1e1e1e;
+      color: #fff;
+      border: 1px solid #444;
+    }
+
+    .paynow-btn {
+      background: #FFD700;
+      color: #000;
+    }
+
+    /* PAYNOW QR */
+    .qr-section {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .qr-section p {
+      color: #aaa;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .qr-placeholder {
+      width: 180px;
+      height: 180px;
+      background: #fff;
+      border-radius: 12px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 0.75rem;
+      text-align: center;
+      padding: 10px;
+      font-weight: 600;
+    }
+
+    .cash-note {
+      display: none;
+      margin-top: 20px;
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 16px;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    .new-booking-btn {
+      margin-top: 20px;
+      background: transparent;
+      border: 1px solid #FFD700;
+      color: #FFD700;
+    }
+
+    .new-booking-btn:hover {
+      background: #FFD700;
+      color: #000;
+    }
+
+    /* NO SLOTS */
+    .no-slots {
+      text-align: center;
+      color: #aaa;
+      padding: 20px;
+      font-size: 0.9rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #333;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <h1>LAMBO<span>CUTZ</span></h1>
+    <div class="divider"></div>
+    <p>✂️ Book Your Cut</p>
+  </header>
+
+  <!-- BOOKING FORM -->
+  <div class="booking-container">
+    <div class="card">
+
+      <!-- FORM VIEW -->
+      <div id="formView">
+        <h2>BOOK A SLOT</h2>
+
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="custName" placeholder="e.g. Alex Tan" />
+        </div>
+
+        <div class="form-group">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="custPhone" placeholder="e.g. 91234567" />
+        </div>
+
+        <div class="form-group">
+          <label>Service</label>
+          <div class="service-box">
+            <span>✂️ Haircut</span>
+            <span>$10</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Select Date</label>
+          <select id="dateSelect" onchange="loadSlots()">
+            <option value="">-- Choose a date --</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="slotGroup" style="display:none;">
+          <label>Select Time Slot</label>
+          <select id="slotSelect">
+            <option value="">-- Choose a time --</option>
+          </select>
+          <div class="no-slots" id="noSlotsMsg" style="display:none;">
+            No available slots for this date.
+          </div>
+        </div>
+
+        <button class="btn" onclick="submitBooking()">CONFIRM BOOKING</button>
+      </div>
+
+      <!-- CONFIRMATION VIEW -->
+      <div class="confirmation" id="confirmView">
+        <div class="checkmark">✅</div>
+        <h2>YOU'RE BOOKED!</h2>
+        <p>See you at your slot 💈</p>
+
+        <div class="booking-details">
+          <p>👤 Name: <span id="confName"></span></p>
+          <p>📱 Contact: <span id="confPhone"></span></p>
+          <p>✂️ Service: <span>Haircut — $10</span></p>
+          <p>📅 Date: <span id="confDate"></span></p>
+          <p>🕐 Time: <span id="confTime"></span></p>
+        </div>
+
+        <div class="payment-section">
+          <h3>How will you pay?</h3>
+          <div class="payment-options">
+            <button class="payment-btn cash-btn" onclick="selectPayment('cash')">💵 Cash</button>
+            <button class="payment-btn paynow-btn" onclick="selectPayment('paynow')">PayNow</button>
+          </div>
+        </div>
+
+        <!-- PayNow QR -->
+        <div class="qr-section" id="qrSection">
+          <p>Scan to pay $10 via PayNow</p>
+          <div class="qr-placeholder">
+            📷 Your PayNow<br/>QR Code Here<br/><br/>
+            <small>(Replace this with your QR image)</small>
+          </div>
+          <p style="margin-top:12px; font-size:0.8rem;">Screenshot & pay before your appointment 🙏</p>
+        </div>
+
+        <!-- Cash Note -->
+        <div class="cash-note" id="cashNote">
+          💵 Please pay <strong>$10 cash</strong> when you arrive. See you soon!
+        </div>
+
+        <button class="btn new-booking-btn" onclick="resetForm()">BOOK ANOTHER SLOT</button>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    LAMBOCUTZ © 2024 — Uni Cuts Only 💈
+  </footer>
+
+  <script>
+    // ─── LOAD AVAILABLE DATES FROM ADMIN SETTINGS ───────────────────────
+    function getAvailableDates() {
+      const settings = JSON.parse(localStorage.getItem('lambocutz_settings')) || {};
+      return settings.availableDates || [];
+    }
+
+    function getBookings() {
+      return JSON.parse(localStorage.getItem('lambocutz_bookings')) || [];
+    }
+
+    function formatDateDisplay(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-SG', {
+        weekday: 'long', year: 'numeric',
+        month: 'long', day: 'numeric'
+      });
+    }
+
+    // ─── POPULATE DATE DROPDOWN ──────────────────────────────────────────
+    function populateDates() {
+      const dateSelect = document.getElementById('dateSelect');
+      const availableDates = getAvailableDates();
+
+      // Clear existing options
+      dateSelect.innerHTML = '<option value="">-- Choose a date --</option>';
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Filter out past dates
+      const futureDates = availableDates.filter(d => {
+        const date = new Date(d + 'T00:00:00');
+        return date >= today;
+      });
+
+      if (futureDates.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No available dates yet — check back soon!';
+        dateSelect.appendChild(opt);
+        return;
+      }
+
+      futureDates.sort().forEach(dateStr => {
+        const opt = document.createElement('option');
+        opt.value = dateStr;
+        opt.textContent = formatDateDisplay(dateStr);
+        dateSelect.appendChild(opt);
+      });
+    }
+
+    // ─── LOAD TIME SLOTS FOR SELECTED DATE ──────────────────────────────
+    function loadSlots() {
+      const dateStr = document.getElementById('dateSelect').value;
+      const slotGroup = document.getElementById('slotGroup');
+      const slotSelect = document.getElementById('slotSelect');
+      const noSlotsMsg = document.getElementById('noSlotsMsg');
+
+      if (!dateStr) {
+        slotGroup.style.display = 'none';
+        return;
+      }
+
+      slotGroup.style.display = 'block';
+
+      const settings = JSON.parse(localStorage.getItem('lambocutz_settings')) || {};
+      const startHour = settings.startHour || 10;
+      const endHour = settings.endHour || 18;
+
+      // Generate all slots
+      const allSlots = [];
+      for (let h = startHour; h < endHour; h++) {
+        const label = formatTime(h);
+        allSlots.push({ value: `${h}:00`, label });
+      }
+
+      // Get booked slots for this date
+      const bookings = getBookings();
+      const bookedSlots = bookings
+        .filter(b => b.date === dateStr && b.status !== 'cancelled')
+        .map(b => b.time);
+
+      // Filter available
+      const available = allSlots.filter(s => !bookedSlots.includes(s.value));
+
+      slotSelect.innerHTML = '<option value="">-- Choose a time --</option>';
+
+      if (available.length === 0) {
+        slotSelect.style.display = 'none';
+        noSlotsMsg.style.display = 'block';
+      } else {
+        slotSelect.style.display = 'block';
+        noSlotsMsg.style.display = 'none';
+        available.forEach(slot => {
+          const opt = document.createElement('option');
+          opt.value = slot.value;
+          opt.textContent = slot.label;
+          slotSelect.appendChild(opt);
+        });
+      }
+    }
+
+    function formatTime(hour) {
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      const h = hour > 12 ? hour - 12 : hour;
+      return `${h}:00 ${suffix} — ${h === 12 ? 1 : h + 1 > 12 ? h + 1 - 12 : h + 1}:00 ${hour + 1 >= 12 ? 'PM' : 'AM'}`;
+    }
+
+    // ─── SUBMIT BOOKING ──────────────────────────────────────────────────
+    function submitBooking() {
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      const date = document.getElementById('dateSelect').value;
+      const time = document.getElementById('slotSelect').value;
+
+      if (!name) return alert('Please enter your name!');
+      if (!phone) return alert('Please enter your WhatsApp number!');
+      if (!date) return alert('Please select a date!');
+      if (!time) return alert('Please select a time slot!');
+
+      // Double check slot not taken
+      const bookings = getBookings();
+      const conflict = bookings.find(b =>
+        b.date === date && b.time === time && b.status !== 'cancelled'
+      );
+      if (conflict) {
+        alert('Oops! That slot just got taken. Please pick another time.');
+        loadSlots();
+        return;
+      }
+
+      // Save booking
+      const booking = {
+        id: Date.now().toString(),
+        name,
+        phone,
+        date,
+        time,
+        service: 'Haircut',
+        price: 10,
+        payment: 'pending',
+        status: 'confirmed',
+        createdAt: new Date().toISOString()
+      };
+
+      bookings.push(booking);
+      localStorage.setItem('lambocutz_bookings', JSON.stringify(bookings));
+
+      // Show confirmation
+      document.getElementById('confName').textContent = name;
+      document.getElementById('confPhone').textContent = phone;
+      document.getElementById('confDate').textContent = formatDateDisplay(date);
+      document.getElementById('confTime').textContent = formatTime(parseInt(time));
+
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('confirmView').style.display = 'block';
+    }
+
+    // ─── PAYMENT SELECTION ───────────────────────────────────────────────
+    function selectPayment(method) {
+      document.getElementById('qrSection').style.display = 'none';
+      document.getElementById('cashNote').style.display = 'none';
+
+      if (method === 'paynow') {
+        document.getElementById('qrSection').style.display = 'block';
+      } else {
+        document.getElementById('cashNote').style.display = 'block';
+      }
+    }
+
+    // ─── RESET FORM ──────────────────────────────────────────────────────
+    function resetForm() {
+      document.getElementById('custName').value = '';
+      document.getElementById('custPhone').value = '';
+      document.getElementById('dateSelect').value = '';
+      document.getElementById('slotGroup').style.display = 'none';
+      document.getElementById('qrSection').style.display = 'none';
+      document.getElementById('cashNote').style.display = 'none';
+      document.getElementById('formView').style.display = 'block';
+      document.getElementById('confirmView').style.display = 'none';
+      populateDates();
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────────
+    populateDates();
+  </script>
+
+</body>
+</html>
