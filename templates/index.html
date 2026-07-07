@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lambocutz</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -18,7 +14,6 @@
       min-height: 100vh;
     }
 
-    /* HEADER */
     header {
       text-align: center;
       padding: 50px 20px 30px;
@@ -31,9 +26,7 @@
       color: #fff;
     }
 
-    header h1 span {
-      color: #FFD700;
-    }
+    header h1 span { color: #FFD700; }
 
     header p {
       color: #aaa;
@@ -50,7 +43,6 @@
       margin: 15px auto;
     }
 
-    /* BOOKING SECTION */
     .booking-container {
       max-width: 500px;
       margin: 20px auto 60px;
@@ -71,9 +63,7 @@
       letter-spacing: 1px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
-    }
+    .form-group { margin-bottom: 20px; }
 
     label {
       display: block;
@@ -96,13 +86,8 @@
       transition: border 0.2s;
     }
 
-    input:focus, select:focus {
-      border-color: #FFD700;
-    }
-
-    select option {
-      background: #1e1e1e;
-    }
+    input:focus, select:focus { border-color: #FFD700; }
+    select option { background: #1e1e1e; }
 
     .service-box {
       background: #1e1e1e;
@@ -136,26 +121,17 @@
       transition: background 0.2s, transform 0.1s;
     }
 
-    .btn:hover {
-      background: #e6c200;
-      transform: scale(1.01);
-    }
+    .btn:hover { background: #e6c200; transform: scale(1.01); }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { background: #555; color: #999; cursor: not-allowed; transform: none; }
 
-    .btn:active {
-      transform: scale(0.99);
-    }
-
-    /* CONFIRMATION */
     .confirmation {
       display: none;
       text-align: center;
       padding: 20px 0;
     }
 
-    .confirmation .checkmark {
-      font-size: 4rem;
-      margin-bottom: 15px;
-    }
+    .confirmation .checkmark { font-size: 4rem; margin-bottom: 15px; }
 
     .confirmation h2 {
       font-size: 1.5rem;
@@ -163,11 +139,7 @@
       margin-bottom: 10px;
     }
 
-    .confirmation p {
-      color: #aaa;
-      margin-bottom: 6px;
-      font-size: 0.95rem;
-    }
+    .confirmation p { color: #aaa; margin-bottom: 6px; font-size: 0.95rem; }
 
     .confirmation .booking-details {
       background: #1e1e1e;
@@ -188,9 +160,7 @@
       font-weight: 600;
     }
 
-    .payment-section {
-      margin-top: 20px;
-    }
+    .payment-section { margin-top: 20px; }
 
     .payment-section h3 {
       font-size: 0.85rem;
@@ -218,33 +188,17 @@
       transition: opacity 0.2s;
     }
 
-    .payment-btn:hover {
-      opacity: 0.85;
-    }
+    .payment-btn:hover { opacity: 0.85; }
+    .cash-btn { background: #1e1e1e; color: #fff; border: 1px solid #444; }
+    .paynow-btn { background: #FFD700; color: #000; }
 
-    .cash-btn {
-      background: #1e1e1e;
-      color: #fff;
-      border: 1px solid #444;
-    }
-
-    .paynow-btn {
-      background: #FFD700;
-      color: #000;
-    }
-
-    /* PAYNOW QR */
     .qr-section {
       display: none;
       margin-top: 20px;
       text-align: center;
     }
 
-    .qr-section p {
-      color: #aaa;
-      font-size: 0.85rem;
-      margin-bottom: 12px;
-    }
+    .qr-section p { color: #aaa; font-size: 0.85rem; margin-bottom: 12px; }
 
     .qr-placeholder {
       width: 180px;
@@ -279,12 +233,8 @@
       color: #FFD700;
     }
 
-    .new-booking-btn:hover {
-      background: #FFD700;
-      color: #000;
-    }
+    .new-booking-btn:hover { background: #FFD700; color: #000; }
 
-    /* NO SLOTS */
     .no-slots {
       text-align: center;
       color: #aaa;
@@ -292,7 +242,13 @@
       font-size: 0.9rem;
     }
 
-    /* FOOTER */
+    .loading {
+      text-align: center;
+      color: #FFD700;
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+
     footer {
       text-align: center;
       padding: 30px;
@@ -304,14 +260,12 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header>
     <h1>LAMBO<span>CUTZ</span></h1>
     <div class="divider"></div>
     <p>✂️ Book Your Cut</p>
   </header>
 
-  <!-- BOOKING FORM -->
   <div class="booking-container">
     <div class="card">
 
@@ -339,14 +293,16 @@
 
         <div class="form-group">
           <label>Select Date</label>
-          <select id="dateSelect" onchange="loadSlots()">
+          <div class="loading" id="dateLoading">Loading dates...</div>
+          <select id="dateSelect" onchange="loadSlots()" style="display:none;">
             <option value="">-- Choose a date --</option>
           </select>
         </div>
 
         <div class="form-group" id="slotGroup" style="display:none;">
           <label>Select Time Slot</label>
-          <select id="slotSelect">
+          <div class="loading" id="slotLoading" style="display:none;">Loading slots...</div>
+          <select id="slotSelect" style="display:none;">
             <option value="">-- Choose a time --</option>
           </select>
           <div class="no-slots" id="noSlotsMsg" style="display:none;">
@@ -354,7 +310,7 @@
           </div>
         </div>
 
-        <button class="btn" onclick="submitBooking()">CONFIRM BOOKING</button>
+        <button class="btn" id="bookBtn" onclick="submitBooking()">CONFIRM BOOKING</button>
       </div>
 
       <!-- CONFIRMATION VIEW -->
@@ -379,7 +335,6 @@
           </div>
         </div>
 
-        <!-- PayNow QR -->
         <div class="qr-section" id="qrSection">
           <p>Scan to pay $10 via PayNow</p>
           <div class="qr-placeholder">
@@ -389,7 +344,6 @@
           <p style="margin-top:12px; font-size:0.8rem;">Screenshot & pay before your appointment 🙏</p>
         </div>
 
-        <!-- Cash Note -->
         <div class="cash-note" id="cashNote">
           💵 Please pay <strong>$10 cash</strong> when you arrive. See you soon!
         </div>
@@ -401,20 +355,11 @@
   </div>
 
   <footer>
-    LAMBOCUTZ © 2024 — Uni Cuts Only 💈
+    LAMBOCUTZ © 2026 💈
   </footer>
 
   <script>
-    // ─── LOAD AVAILABLE DATES FROM ADMIN SETTINGS ───────────────────────
-    function getAvailableDates() {
-      const settings = JSON.parse(localStorage.getItem('lambocutz_settings')) || {};
-      return settings.availableDates || [];
-    }
-
-    function getBookings() {
-      return JSON.parse(localStorage.getItem('lambocutz_bookings')) || [];
-    }
-
+    // ─── HELPERS ─────────────────────────────────────────────────────────
     function formatDateDisplay(dateStr) {
       const d = new Date(dateStr + 'T00:00:00');
       return d.toLocaleDateString('en-SG', {
@@ -423,44 +368,62 @@
       });
     }
 
-    // ─── POPULATE DATE DROPDOWN ──────────────────────────────────────────
-    function populateDates() {
-      const dateSelect = document.getElementById('dateSelect');
-      const availableDates = getAvailableDates();
-
-      // Clear existing options
-      dateSelect.innerHTML = '<option value="">-- Choose a date --</option>';
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Filter out past dates
-      const futureDates = availableDates.filter(d => {
-        const date = new Date(d + 'T00:00:00');
-        return date >= today;
-      });
-
-      if (futureDates.length === 0) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = 'No available dates yet — check back soon!';
-        dateSelect.appendChild(opt);
-        return;
-      }
-
-      futureDates.sort().forEach(dateStr => {
-        const opt = document.createElement('option');
-        opt.value = dateStr;
-        opt.textContent = formatDateDisplay(dateStr);
-        dateSelect.appendChild(opt);
-      });
+    function formatTime(timeStr) {
+      const hour = parseInt(timeStr.split(':')[0]);
+      const suffix = hour >= 12 ? 'PM' : 'AM';
+      const h = hour > 12 ? hour - 12 : hour;
+      const nextHour = hour + 1;
+      const nextSuffix = nextHour >= 12 ? 'PM' : 'AM';
+      const nh = nextHour > 12 ? nextHour - 12 : nextHour;
+      return `${h}:00 ${suffix} — ${nh}:00 ${nextSuffix}`;
     }
 
-    // ─── LOAD TIME SLOTS FOR SELECTED DATE ──────────────────────────────
-    function loadSlots() {
+    // ─── LOAD DATES FROM API ─────────────────────────────────────────────
+    async function populateDates() {
+      const dateLoading = document.getElementById('dateLoading');
+      const dateSelect = document.getElementById('dateSelect');
+
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const futureDates = (data.available_dates || []).filter(d => {
+          return new Date(d + 'T00:00:00') >= today;
+        });
+
+        dateLoading.style.display = 'none';
+        dateSelect.style.display = 'block';
+        dateSelect.innerHTML = '<option value="">-- Choose a date --</option>';
+
+        if (futureDates.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No available dates yet — check back soon!';
+          dateSelect.appendChild(opt);
+          return;
+        }
+
+        futureDates.sort().forEach(dateStr => {
+          const opt = document.createElement('option');
+          opt.value = dateStr;
+          opt.textContent = formatDateDisplay(dateStr);
+          dateSelect.appendChild(opt);
+        });
+
+      } catch (err) {
+        dateLoading.textContent = 'Failed to load dates. Please refresh.';
+      }
+    }
+
+    // ─── LOAD SLOTS FROM API ─────────────────────────────────────────────
+    async function loadSlots() {
       const dateStr = document.getElementById('dateSelect').value;
       const slotGroup = document.getElementById('slotGroup');
       const slotSelect = document.getElementById('slotSelect');
+      const slotLoading = document.getElementById('slotLoading');
       const noSlotsMsg = document.getElementById('noSlotsMsg');
 
       if (!dateStr) {
@@ -469,105 +432,92 @@
       }
 
       slotGroup.style.display = 'block';
+      slotLoading.style.display = 'block';
+      slotSelect.style.display = 'none';
+      noSlotsMsg.style.display = 'none';
 
-      const settings = JSON.parse(localStorage.getItem('lambocutz_settings')) || {};
-      const startHour = settings.startHour || 10;
-      const endHour = settings.endHour || 18;
+      try {
+        const res = await fetch(`/api/slots?date=${dateStr}`);
+        const data = await res.json();
 
-      // Generate all slots
-      const allSlots = [];
-      for (let h = startHour; h < endHour; h++) {
-        const label = formatTime(h);
-        allSlots.push({ value: `${h}:00`, label });
-      }
+        slotLoading.style.display = 'none';
 
-      // Get booked slots for this date
-      const bookings = getBookings();
-      const bookedSlots = bookings
-        .filter(b => b.date === dateStr && b.status !== 'cancelled')
-        .map(b => b.time);
+        const available = data.slots.filter(s => s.available);
 
-      // Filter available
-      const available = allSlots.filter(s => !bookedSlots.includes(s.value));
+        if (available.length === 0) {
+          noSlotsMsg.style.display = 'block';
+          slotSelect.style.display = 'none';
+          return;
+        }
 
-      slotSelect.innerHTML = '<option value="">-- Choose a time --</option>';
-
-      if (available.length === 0) {
-        slotSelect.style.display = 'none';
-        noSlotsMsg.style.display = 'block';
-      } else {
         slotSelect.style.display = 'block';
-        noSlotsMsg.style.display = 'none';
+        slotSelect.innerHTML = '<option value="">-- Choose a time --</option>';
+
         available.forEach(slot => {
           const opt = document.createElement('option');
           opt.value = slot.value;
-          opt.textContent = slot.label;
+          opt.textContent = formatTime(slot.value);
           slotSelect.appendChild(opt);
         });
-      }
-    }
 
-    function formatTime(hour) {
-      const suffix = hour >= 12 ? 'PM' : 'AM';
-      const h = hour > 12 ? hour - 12 : hour;
-      return `${h}:00 ${suffix} — ${h === 12 ? 1 : h + 1 > 12 ? h + 1 - 12 : h + 1}:00 ${hour + 1 >= 12 ? 'PM' : 'AM'}`;
+      } catch (err) {
+        slotLoading.textContent = 'Failed to load slots. Please refresh.';
+      }
     }
 
     // ─── SUBMIT BOOKING ──────────────────────────────────────────────────
-    function submitBooking() {
-      const name = document.getElementById('custName').value.trim();
+    async function submitBooking() {
+      const name  = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
-      const date = document.getElementById('dateSelect').value;
-      const time = document.getElementById('slotSelect').value;
+      const date  = document.getElementById('dateSelect').value;
+      const time  = document.getElementById('slotSelect').value;
+      const btn   = document.getElementById('bookBtn');
 
-      if (!name) return alert('Please enter your name!');
+      if (!name)  return alert('Please enter your name!');
       if (!phone) return alert('Please enter your WhatsApp number!');
-      if (!date) return alert('Please select a date!');
-      if (!time) return alert('Please select a time slot!');
+      if (!date)  return alert('Please select a date!');
+      if (!time)  return alert('Please select a time slot!');
 
-      // Double check slot not taken
-      const bookings = getBookings();
-      const conflict = bookings.find(b =>
-        b.date === date && b.time === time && b.status !== 'cancelled'
-      );
-      if (conflict) {
-        alert('Oops! That slot just got taken. Please pick another time.');
-        loadSlots();
-        return;
+      btn.disabled = true;
+      btn.textContent = 'Booking...';
+
+      try {
+        const res = await fetch('/api/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, phone, date, time })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || 'Booking failed. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'CONFIRM BOOKING';
+          loadSlots();
+          return;
+        }
+
+        // Show confirmation
+        document.getElementById('confName').textContent = name;
+        document.getElementById('confPhone').textContent = phone;
+        document.getElementById('confDate').textContent = formatDateDisplay(date);
+        document.getElementById('confTime').textContent = formatTime(time);
+
+        document.getElementById('formView').style.display = 'none';
+        document.getElementById('confirmView').style.display = 'block';
+
+      } catch (err) {
+        alert('Something went wrong. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'CONFIRM BOOKING';
       }
-
-      // Save booking
-      const booking = {
-        id: Date.now().toString(),
-        name,
-        phone,
-        date,
-        time,
-        service: 'Haircut',
-        price: 10,
-        payment: 'pending',
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
-      };
-
-      bookings.push(booking);
-      localStorage.setItem('lambocutz_bookings', JSON.stringify(bookings));
-
-      // Show confirmation
-      document.getElementById('confName').textContent = name;
-      document.getElementById('confPhone').textContent = phone;
-      document.getElementById('confDate').textContent = formatDateDisplay(date);
-      document.getElementById('confTime').textContent = formatTime(parseInt(time));
-
-      document.getElementById('formView').style.display = 'none';
-      document.getElementById('confirmView').style.display = 'block';
     }
 
-    // ─── PAYMENT SELECTION ───────────────────────────────────────────────
+    // ─── PAYMENT ─────────────────────────────────────────────────────────
     function selectPayment(method) {
       document.getElementById('qrSection').style.display = 'none';
       document.getElementById('cashNote').style.display = 'none';
-
       if (method === 'paynow') {
         document.getElementById('qrSection').style.display = 'block';
       } else {
@@ -575,20 +525,24 @@
       }
     }
 
-    // ─── RESET FORM ──────────────────────────────────────────────────────
+    // ─── RESET ───────────────────────────────────────────────────────────
     function resetForm() {
       document.getElementById('custName').value = '';
       document.getElementById('custPhone').value = '';
-      document.getElementById('dateSelect').value = '';
       document.getElementById('slotGroup').style.display = 'none';
       document.getElementById('qrSection').style.display = 'none';
       document.getElementById('cashNote').style.display = 'none';
       document.getElementById('formView').style.display = 'block';
       document.getElementById('confirmView').style.display = 'none';
+
+      const btn = document.getElementById('bookBtn');
+      btn.disabled = false;
+      btn.textContent = 'CONFIRM BOOKING';
+
       populateDates();
     }
 
-    // ─── INIT ────────────────────────────────────────────────────────────
+    // ─── INIT ─────────────────────────────────────────────────────────────
     populateDates();
   </script>
 
