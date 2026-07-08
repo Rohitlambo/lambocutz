@@ -65,7 +65,7 @@ def init_db():
     c.execute("INSERT INTO settings VALUES ('start_hour', '10') ON CONFLICT (key) DO NOTHING")
     c.execute("INSERT INTO settings VALUES ('end_hour', '18') ON CONFLICT (key) DO NOTHING")
     c.execute("INSERT INTO settings VALUES ('available_dates', '') ON CONFLICT (key) DO NOTHING")
-    c.execute("INSERT INTO settings VALUES ('location', 'Location TBA') ON CONFLICT (key) DO NOTHING")
+    c.execute("INSERT INTO settings VALUES ('location', 'Location TBD') ON CONFLICT (key) DO NOTHING")
     c.execute("INSERT INTO settings VALUES ('location_url', '') ON CONFLICT (key) DO NOTHING")
 
     # Default profile
