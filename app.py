@@ -211,6 +211,7 @@ def api_book():
 def api_get_reviews():
     conn = get_db()
     c = conn.cursor()
+    # Pull reviews where approved is explicitly True
     c.execute('''
         SELECT id, name, rating, comment, photo_url, created_at
         FROM reviews
@@ -261,7 +262,6 @@ def api_submit_review():
             # This is the path the web browser will use to read the image
             photo_url = f"/{file_path.replace(os.sep, '/')}"
 
-    # 3. Insert into Database (including photo_url)
     conn = get_db()
     c = conn.cursor()
     c.execute(
@@ -276,7 +276,7 @@ def api_submit_review():
     return jsonify({
         'success':   True,
         'review_id': review_id,
-        'message':   'Review submitted! Awaiting approval.'
+        'message':   'Review posted successfully!'  # Updated message string
     })
 
 # ─── PROFILE ROUTES (UNIFIED PUBLIC & ADMIN) ──────────────────────────────────
