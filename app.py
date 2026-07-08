@@ -222,13 +222,15 @@ def api_get_reviews():
     conn.close()
     return jsonify([dict(zip(cols, row)) for row in rows])
 
+# Make sure to import secure_filename at the top of app.py:
+# from werkzeug.utils import secure_filename
+
 @app.route('/api/reviews', methods=['POST'])
 def api_submit_review():
-    data = request.get_json()
-
-    name    = data.get('name', '').strip()
-    rating  = data.get('rating')
-    comment = data.get('comment', '').strip()
+    # 1. Handle Multipart Form Data instead of JSON
+    name = request.form.get('name', '').strip()
+    rating = request.form.get('rating')
+    comment = request.form.get('comment', '').strip()
 
     if not name or not rating:
         return jsonify({'error': 'Name and rating required'}), 400
@@ -240,12 +242,32 @@ def api_submit_review():
     except (ValueError, TypeError):
         return jsonify({'error': 'Rating must be 1-5'}), 400
 
+    # 2. Process File Upload
+    photo_url = None
+    if 'photo' in request.files:
+        file = request.files['photo']
+        if file and file.filename != '':
+            from werkzeug.utils import secure_filename
+            
+            # Ensure upload folder exists
+            upload_folder = os.path.join('static', 'uploads')
+            if not os.path.exists(upload_folder):
+                os.makedirs(upload_folder)
+                
+            filename = secure_filename(f"{datetime.now().timestamp()}_{file.filename}")
+            file_path = os.path.join(upload_folder, filename)
+            file.save(file_path)
+            
+            # This is the path the web browser will use to read the image
+            photo_url = f"/{file_path.replace(os.sep, '/')}"
+
+    # 3. Insert into Database (including photo_url)
     conn = get_db()
     c = conn.cursor()
     c.execute(
-        '''INSERT INTO reviews (name, rating, comment)
-           VALUES (%s, %s, %s) RETURNING id''',
-        (name, rating, comment)
+        '''INSERT INTO reviews (name, rating, comment, photo_url)
+           VALUES (%s, %s, %s, %s) RETURNING id''',
+        (name, rating, comment, photo_url)
     )
     review_id = c.fetchone()[0]
     conn.commit()
