@@ -454,10 +454,11 @@
         }
     }
 
-    // ── SUBMIT REVIEW ──────────────────────────────────────────────────────
+// ── SUBMIT REVIEW ──────────────────────────────────────────────────────
     async function submitReview() {
         const name    = document.getElementById('reviewName').value.trim();
         const comment = document.getElementById('reviewComment').value.trim();
+        const fileInput = document.getElementById('reviewPhoto');
         const btn     = document.getElementById('submitBtn');
         const msg     = document.getElementById('formMsg');
 
@@ -478,20 +479,23 @@
         btn.disabled = true;
         btn.textContent = 'Submitting...';
 
-        // CHANGED: Packaging parameters explicitly as JSON to match your app.py backend endpoint parsing
-        const reviewPayload = {
-            name: name,
-            rating: selectedRating,
-            comment: comment
-        };
+        // 1. Switch back to FormData so files can be carried over HTTP
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('rating', selectedRating);
+        formData.append('comment', comment);
+        
+        // 2. Append the physical photo file from the input field if it exists
+        if (fileInput.files[0]) {
+            formData.append('photo', fileInput.files[0]);
+        }
 
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(reviewPayload)
+                // CRITICAL: No headers are set manually here. 
+                // The browser will automatically construct multi-part boundaries.
+                body: formData 
             });
             const data = await res.json();
 
@@ -500,7 +504,7 @@
                 msg.textContent = '✅ Thanks! Your review is awaiting approval.';
                 document.getElementById('reviewName').value = '';
                 document.getElementById('reviewComment').value = '';
-                document.getElementById('reviewPhoto').value = '';
+                fileInput.value = '';
                 document.getElementById('photoPreview').style.display = 'none';
                 selectedRating = 0;
                 highlightStars(0);
