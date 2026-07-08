@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile – Lambocutz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #1a1a1a, #111);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #c9a84c;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            color: #c9a84c;
+            letter-spacing: 2px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: 1px solid #c9a84c;
+            color: #c9a84c;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #c9a84c;
+            color: #000;
+        }
+
+        /* ── HERO CARD ── */
+        .hero-card {
+            background: linear-gradient(160deg, #1a1a1a, #111);
+            padding: 40px 24px 32px;
+            text-align: center;
+            border-bottom: 1px solid #1e1e1e;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 18px;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #c9a84c;
+            background: #1e1e1e;
+        }
+
+        .avatar-fallback {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 3px solid #c9a84c;
+            background: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 18px;
+        }
+
+        .barber-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+
+        .barber-title {
+            color: #c9a84c;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin: 4px 0 16px;
+        }
+
+        .bio-text {
+            color: #aaa;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            max-width: 380px;
+            margin: 0 auto 24px;
+        }
+
+        /* ── SOCIAL BUTTONS ── */
+        .social-links {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 24px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .social-btn.instagram {
+            background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+            color: #fff;
+        }
+
+        .social-btn.tiktok {
+            background: #010101;
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .social-btn.hidden { display: none; }
+
+        /* ── STATS ROW ── */
+        .stats-row {
+            display: flex;
+            border-bottom: 1px solid #1e1e1e;
+        }
+
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: 20px 10px;
+            border-right: 1px solid #1e1e1e;
+        }
+
+        .stat-box:last-child { border-right: none; }
+
+        .stat-number {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #c9a84c;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* ── SERVICES SECTION ── */
+        .section {
+            padding: 28px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            color: #c9a84c;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .service-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .service-item {
+            background: #111;
+            border: 1px solid #1e1e1e;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-name {
+            font-size: 0.95rem;
+            color: #ddd;
+        }
+
+        .service-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #c9a84c;
+        }
+
+        /* ── BOOK BUTTON ── */
+        .book-section {
+            padding: 0 20px 40px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .book-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #c9a84c, #e8c96d);
+            color: #000;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-decoration: none;
+            text-align: center;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .book-btn:hover { opacity: 0.9; }
+
+        /* ── LOADING ── */
+        .loading-state {
+            text-align: center;
+            color: #444;
+            padding: 60px 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <a href="/" class="back-btn">← Back</a>
+        <h1>👤 PROFILE</h1>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div class="loading-state" id="loadingState">Loading profile...</div>
+
+    <!-- MAIN CONTENT (hidden until loaded) -->
+    <div id="mainContent" style="display:none">
+
+        <!-- HERO CARD -->
+        <div class="hero-card">
+            <div id="avatarContainer" class="avatar-fallback">💈</div>
+            <div class="barber-name">LAMBOCUTZ</div>
+            <div class="barber-title">✂️ Professional Barber</div>
+            <p class="bio-text" id="bioText"></p>
+            <div class="social-links">
+                <a id="igBtn" class="social-btn instagram hidden"
+                   href="#" target="_blank" rel="noopener">
+                    📸 Instagram
+                </a>
+                <a id="ttBtn" class="social-btn tiktok hidden"
+                   href="#" target="_blank" rel="noopener">
+                    🎵 TikTok
+                </a>
+            </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-number" id="statRating">–</div>
+                <div class="stat-label">Avg Rating</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="statReviews">–</div>
+                <div class="stat-label">Reviews</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">$10</div>
+                <div class="stat-label">Starting at</div>
+            </div>
+        </div>
+
+        <!-- SERVICES -->
+        <div class="section">
+            <div class="section-title">✂️ Services & Pricing</div>
+            <div class="service-list">
+                <div class="service-item">
+                    <span class="service-name">Haircut</span>
+                    <span class="service-price">$10</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Haircut + Beard Trim</span>
+                    <span class="service-price">$15</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Kids Cut (under 12)</span>
+                    <span class="service-price">$8</span>
+                </div>
+                <div class="service-item">
+                    <span class="service-name">Shape Up / Edge Up</span>
+                    <span class="service-price">$8</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOOK BUTTON -->
+        <div class="book-section">
+            <a href="/" class="book-btn">✂️ BOOK NOW</a>
+        </div>
+
+    </div>
+
+<script>
+    async function loadProfile() {
+        try {
+            // Load profile + reviews in parallel
+            const [profileRes, reviewsRes] = await Promise.all([
+                fetch('/api/profile'),
+                fetch('/api/reviews')
+            ]);
+
+            const profile = await profileRes.json();
+            const reviews = await reviewsRes.json();
+
+            // ── Bio
+            document.getElementById('bioText').textContent =
+                profile.bio || 'Fresh cuts, clean fades. Book your slot today.';
+
+            // ── Avatar
+            if (profile.photo_url) {
+                const img = document.createElement('img');
+                img.src       = profile.photo_url;
+                img.alt       = 'Lambocutz';
+                img.className = 'avatar';
+                img.onerror   = () => {}; // keep fallback if broken
+                const container = document.getElementById('avatarContainer');
+                container.className = 'avatar-wrap';
+                container.innerHTML = '';
+                container.appendChild(img);
+            }
+
+            // ── Social links
+            if (profile.instagram) {
+                const ig = document.getElementById('igBtn');
+                ig.href = `https://instagram.com/${profile.instagram.replace('@','')}`;
+                ig.classList.remove('hidden');
+            }
+            if (profile.tiktok) {
+                const tt = document.getElementById('ttBtn');
+                tt.href = `https://tiktok.com/@${profile.tiktok.replace('@','')}`;
+                tt.classList.remove('hidden');
+            }
+
+            // ── Stats from reviews
+            const total = reviews.length;
+            document.getElementById('statReviews').textContent = total;
+
+            if (total > 0) {
+                const avg = reviews.reduce((s, r) => s + r.rating, 0) / total;
+                document.getElementById('statRating').textContent = avg.toFixed(1) + '★';
+            } else {
+                document.getElementById('statRating').textContent = '–';
+            }
+
+            // ── Show content
+            document.getElementById('loadingState').style.display  = 'none';
+            document.getElementById('mainContent').style.display   = 'block';
+
+        } catch (e) {
+            document.getElementById('loadingState').textContent =
+                'Failed to load profile.';
+        }
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>
