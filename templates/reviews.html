@@ -454,7 +454,7 @@
         }
     }
 
-// ── SUBMIT REVIEW ──────────────────────────────────────────────────────
+    // ── SUBMIT REVIEW ──────────────────────────────────────────────────────
     async function submitReview() {
         const name    = document.getElementById('reviewName').value.trim();
         const comment = document.getElementById('reviewComment').value.trim();
@@ -479,13 +479,11 @@
         btn.disabled = true;
         btn.textContent = 'Submitting...';
 
-        // 1. Switch back to FormData so files can be carried over HTTP
         const formData = new FormData();
         formData.append('name', name);
         formData.append('rating', selectedRating);
         formData.append('comment', comment);
         
-        // 2. Append the physical photo file from the input field if it exists
         if (fileInput.files[0]) {
             formData.append('photo', fileInput.files[0]);
         }
@@ -493,15 +491,12 @@
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
-                // CRITICAL: No headers are set manually here. 
-                // The browser will automatically construct multi-part boundaries.
                 body: formData 
             });
             const data = await res.json();
 
             if (data.success) {
                 msg.className = 'form-msg success';
-                // Updated text line:
                 msg.textContent = '✅ Thanks! Your review has been posted successfully.'; 
                 
                 // Clear out form inputs
@@ -512,9 +507,8 @@
                 selectedRating = 0;
                 highlightStars(0);
                 
-                // Optional: Refresh the timeline instantly so they see it right away
+                // Instantly re-fetch and render lists
                 loadReviews(); 
-            }
             } else {
                 msg.className = 'form-msg error';
                 msg.textContent = data.error || 'Something went wrong.';
@@ -567,7 +561,6 @@
         document.getElementById('overallRating').textContent = avg.toFixed(1);
         document.getElementById('overallStars').innerHTML = starsHTML(Math.round(avg), '1.6rem');
 
-        // Count per star
         const counts = [0, 0, 0, 0, 0];
         allReviews.forEach(r => counts[r.rating - 1]++);
 
@@ -603,7 +596,6 @@
                 month: 'short', day: 'numeric', year: 'numeric'
             });
             
-            // CHANGED: Evaluated against r.photo_url instead of r.image_url to match your app.py schema
             return `
                 <div class="review-card">
                     <div class="review-top">
