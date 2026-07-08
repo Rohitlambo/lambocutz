@@ -1027,7 +1027,7 @@
       });
     }
 
-    async function updateReviewStatus(id, status) {
+async function updateReviewStatus(id, status) {
       try {
         const res = await fetch(`/api/admin/reviews/${id}/status`, {
           method: 'POST',
@@ -1040,21 +1040,21 @@
           showToast(`Review ${status}!`);
         }
       } catch (err) {
-        showToast("Error updating review validation.");
+        showToast("Error updating review status.");
       }
     }
 
     async function deleteReview(id) {
-      if (!confirm("Permanently wipe out this review from history?")) return;
+      if (!confirm("Permanently delete this customer review?")) return;
       try {
         const res = await fetch(`/api/admin/reviews/${id}`, { method: 'DELETE' });
         if (res.ok) {
           allReviews = allReviews.filter(r => r.id != id);
           renderReviews();
-          showToast("Review destroyed.");
+          showToast("Review deleted.");
         }
       } catch (err) {
-        showToast("Error deleting review.");
+        showToast("Error removing review.");
       }
     }
 
@@ -1064,18 +1064,49 @@
     async function loadProfile() {
       try {
         const res = await fetch('/api/profile');
-        if (!res.ok) return;
-        const profile = await res.json();
-        
-        document.getElementById('profileBio').value = profile.bio || '';
-        document.getElementById('profilePhoto').value = profile.photo_url || '';
-        document.getElementById('profileIG').value = profile.instagram || '';
-        document.getElementById('profileTT').value = profile.tiktok || '';
-        
-        previewAvatar();
-        previewSocials();
+        if (res.ok) {
+          const profile = await res.json();
+          document.getElementById('profileBio').value = profile.bio || "";
+          document.getElementById('profilePhoto').value = profile.photo_url || "";
+          document.getElementById('profileIG').value = profile.instagram || "";
+          document.getElementById('profileTT').value = profile.tiktok || "";
+          
+          previewAvatar();
+          previewSocials();
+        }
       } catch (err) {
-        console.error("Failed to process profile load:", err);
+        console.error("Failed to load profile:", err);
+      }
+    }
+
+    async function saveProfile() {
+      const msgDiv = document.getElementById('profileMsg');
+      msgDiv.className = "profile-msg";
+      msgDiv.textContent = "";
+
+      const bio = document.getElementById('profileBio').value.trim();
+      const photo_url = document.getElementById('profilePhoto').value.trim();
+      const instagram = document.getElementById('profileIG').value.trim();
+      const tiktok = document.getElementById('profileTT').value.trim();
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bio, photo_url, instagram, tiktok })
+        });
+        
+        if (res.ok) {
+          msgDiv.className = "profile-msg success";
+          msgDiv.textContent = "Profile updated successfully!";
+          showToast("Profile saved!");
+        } else {
+          msgDiv.className = "profile-msg error";
+          msgDiv.textContent = "Failed to save profile configuration.";
+        }
+      } catch (err) {
+        msgDiv.className = "profile-msg error";
+        msgDiv.textContent = "Network error saving profile.";
       }
     }
 
@@ -1083,7 +1114,7 @@
       const url = document.getElementById('profilePhoto').value.trim();
       const img = document.getElementById('adminAvatarImg');
       const fallback = document.getElementById('adminAvatarFallback');
-      
+
       if (url) {
         img.src = url;
         img.style.display = 'block';
@@ -1097,45 +1128,19 @@
     function previewSocials() {
       const ig = document.getElementById('profileIG').value.trim();
       const tt = document.getElementById('profileTT').value.trim();
-      const output = document.getElementById('previewSocials');
-      
-      let elements = [];
-      if (ig) elements.push(`📸 ${ig}`);
-      if (tt) elements.push(`🎵 ${tt}`);
-      
-      output.textContent = elements.length > 0 ? elements.join(' | ') : 'No social links set';
+      const preview = document.getElementById('previewSocials');
+
+      let strings = [];
+      if (ig) strings.push(`IG: ${ig}`);
+      if (tt) strings.push(`TikTok: ${tt}`);
+
+      preview.textContent = strings.length > 0 ? strings.join(' | ') : "No social links set";
     }
 
-    async function saveProfile() {
-      const bio = document.getElementById('profileBio').value.trim();
-      const photo_url = document.getElementById('profilePhoto').value.trim();
-      const instagram = document.getElementById('profileIG').value.trim();
-      const tiktok = document.getElementById('profileTT').value.trim();
-      const msg = document.getElementById('profileMsg');
-
-      try {
-        const res = await fetch('/api/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bio, photo_url, instagram, tiktok })
-        });
-        
-        if (res.ok) {
-          msg.className = "profile-msg success";
-          msg.textContent = "Barber profile system updated successfully!";
-          setTimeout(() => msg.textContent = '', 3000);
-        } else {
-          throw new Error();
-        }
-      } catch (err) {
-        msg.className = "profile-msg error";
-        msg.textContent = "Error committing configuration.";
-        setTimeout(() => msg.textContent = '', 3000);
-      }
-    }
-
-    // Run engine setup
-    window.onload = init;
+    // ══════════════════════════════════════════════════════════
+    // WINDOW LOAD
+    // ══════════════════════════════════════════════════════════
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
