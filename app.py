@@ -265,8 +265,8 @@ def api_submit_review():
     conn = get_db()
     c = conn.cursor()
     c.execute(
-        '''INSERT INTO reviews (name, rating, comment, photo_url)
-           VALUES (%s, %s, %s, %s) RETURNING id''',
+        '''INSERT INTO reviews (name, rating, comment, photo_url, approved)
+           VALUES (%s, %s, %s, %s, TRUE) RETURNING id''',
         (name, rating, comment, photo_url)
     )
     review_id = c.fetchone()[0]
