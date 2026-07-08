@@ -458,7 +458,6 @@
     async function submitReview() {
         const name    = document.getElementById('reviewName').value.trim();
         const comment = document.getElementById('reviewComment').value.trim();
-        const fileInput = document.getElementById('reviewPhoto');
         const btn     = document.getElementById('submitBtn');
         const msg     = document.getElementById('formMsg');
 
@@ -479,21 +478,20 @@
         btn.disabled = true;
         btn.textContent = 'Submitting...';
 
-        // NOTE: Instead of sending raw JSON, we use FormData to easily carry files to your backend.
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('rating', selectedRating);
-        formData.append('comment', comment);
-        
-        if (fileInput.files[0]) {
-            formData.append('photo', fileInput.files[0]);
-        }
+        // CHANGED: Packaging parameters explicitly as JSON to match your app.py backend endpoint parsing
+        const reviewPayload = {
+            name: name,
+            rating: selectedRating,
+            comment: comment
+        };
 
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
-                // Content-Type header must be omitted when sending FormData so the browser formats it correctly
-                body: formData 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(reviewPayload)
             });
             const data = await res.json();
 
@@ -502,7 +500,7 @@
                 msg.textContent = '✅ Thanks! Your review is awaiting approval.';
                 document.getElementById('reviewName').value = '';
                 document.getElementById('reviewComment').value = '';
-                fileInput.value = '';
+                document.getElementById('reviewPhoto').value = '';
                 document.getElementById('photoPreview').style.display = 'none';
                 selectedRating = 0;
                 highlightStars(0);
@@ -593,6 +591,8 @@
             const date = new Date(r.created_at).toLocaleDateString('en-US', {
                 month: 'short', day: 'numeric', year: 'numeric'
             });
+            
+            // CHANGED: Evaluated against r.photo_url instead of r.image_url to match your app.py schema
             return `
                 <div class="review-card">
                     <div class="review-top">
@@ -601,7 +601,7 @@
                     </div>
                     <div class="review-stars">${starsHTML(r.rating)}</div>
                     ${r.comment ? `<div class="review-comment">"${escapeHTML(r.comment)}"</div>` : ''}
-                    ${r.image_url ? `<img src="${r.image_url}" class="review-image" alt="${escapeHTML(r.name)}'s haircut">` : ''}
+                    ${r.photo_url ? `<img src="${r.photo_url}" class="review-image" alt="${escapeHTML(r.name)}'s haircut">` : ''}
                 </div>`;
         }).join('');
     }
