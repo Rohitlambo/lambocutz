@@ -118,8 +118,8 @@ def profile_page():
 @app.route('/api/settings', methods=['GET'])
 def api_get_settings():
     return jsonify({
-        'start_hour':      int(get_setting('start_hour') or 10),
-        'end_hour':        int(get_setting('end_hour') or 18),
+        'start_hour':      get_setting('start_hour') or "10:00",
+        'end_hour':        get_setting('end_hour') or "18:00",
         'available_dates': get_available_dates(),
         'location':        get_setting('location') or 'Location TBA',
         'location_url':    get_setting('location_url') or ''
@@ -131,8 +131,11 @@ def api_get_slots():
     if not date:
         return jsonify({'error': 'No date provided'}), 400
 
-    start = int(get_setting('start_hour') or 10)
-    end   = int(get_setting('end_hour') or 18)
+    start_raw = get_setting('start_hour') or "10:00"
+    end_raw = get_setting('end_hour') or "18:00"
+    
+    start = int(start_raw.split(':')[0])
+    end   = int(end_raw.split(':')[0])
 
     conn = get_db()
     c = conn.cursor()
@@ -147,7 +150,7 @@ def api_get_slots():
 
     all_slots = []
     for h in range(start, end):
-        time_str = f"{h}:00"
+        time_str = f"{h}:00" if h >= 10 else f"0{h}:00"
         all_slots.append({
             'value':     time_str,
             'available': time_str not in booked_times
@@ -202,13 +205,12 @@ def api_book():
         'price':      10
     })
 
-# ─── REVIEWS ROUTES ──────────────────────────────────────────────────────────
+# ─── PUBLIC REVIEWS ROUTES ────────────────────────────────────────────────────
 
 @app.route('/api/reviews', methods=['GET'])
 def api_get_reviews():
     conn = get_db()
     c = conn.cursor()
-    # Only return approved reviews to public
     c.execute('''
         SELECT id, name, rating, comment, photo_url, created_at
         FROM reviews
@@ -255,7 +257,7 @@ def api_submit_review():
         'message':   'Review submitted! Awaiting approval.'
     })
 
-# ─── PROFILE ROUTES ───────────────────────────────────────────────────────────
+# ─── PROFILE ROUTES (UNIFIED PUBLIC & ADMIN) ──────────────────────────────────
 
 @app.route('/api/profile', methods=['GET'])
 def api_get_profile():
@@ -266,12 +268,7 @@ def api_get_profile():
     conn.close()
 
     if not row:
-        return jsonify({
-            'bio':       '',
-            'photo_url': '',
-            'instagram': '',
-            'tiktok':    ''
-        })
+        return jsonify({'bio': '', 'photo_url': '', 'instagram': '', 'tiktok': ''})
 
     return jsonify({
         'bio':       row[0] or '',
@@ -280,113 +277,11 @@ def api_get_profile():
         'tiktok':    row[3] or ''
     })
 
-# ─── ADMIN ROUTES ─────────────────────────────────────────────────────────────
-
-@app.route('/admin-lambocutz-secret')
-def admin():
-    return render_template('admin.html')
-
-@app.route('/api/admin/bookings', methods=['GET'])
-def api_admin_bookings():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("SELECT * FROM bookings ORDER BY date ASC, time ASC")
-    rows = c.fetchall()
-    cols = [desc[0] for desc in c.description]
-    conn.close()
-    return jsonify([dict(zip(cols, row)) for row in rows])
-
-@app.route('/api/admin/booking/<int:booking_id>', methods=['PATCH'])
-def api_update_booking(booking_id):
+@app.route('/api/profile', methods=['POST'])
+def api_save_profile():
     data = request.get_json()
     conn = get_db()
     c = conn.cursor()
-
-    if 'status' in data:
-        c.execute(
-            "UPDATE bookings SET status=%s WHERE id=%s",
-            (data['status'], booking_id)
-        )
-    if 'payment' in data:
-        c.execute(
-            "UPDATE bookings SET payment=%s WHERE id=%s",
-            (data['payment'], booking_id)
-        )
-
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/booking/<int:booking_id>', methods=['DELETE'])
-def api_delete_booking(booking_id):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("DELETE FROM bookings WHERE id=%s", (booking_id,))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/settings', methods=['POST'])
-def api_save_settings():
-    data = request.get_json()
-
-    if 'start_hour' in data:
-        set_setting('start_hour', str(data['start_hour']))
-    if 'end_hour' in data:
-        set_setting('end_hour', str(data['end_hour']))
-    if 'available_dates' in data:
-        set_setting('available_dates', ','.join(data['available_dates']))
-    if 'location' in data:
-        set_setting('location', data['location'])
-    if 'location_url' in data:
-        set_setting('location_url', data['location_url'])
-
-    return jsonify({'success': True})
-
-@app.route('/api/admin/reviews', methods=['GET'])
-def api_admin_reviews():
-    """Get ALL reviews including unapproved ones"""
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('SELECT * FROM reviews ORDER BY created_at DESC')
-    rows = c.fetchall()
-    cols = [desc[0] for desc in c.description]
-    conn.close()
-    return jsonify([dict(zip(cols, row)) for row in rows])
-
-@app.route('/api/admin/reviews/<int:review_id>', methods=['PATCH'])
-def api_admin_update_review(review_id):
-    """Approve or reject a review"""
-    data = request.get_json()
-    conn = get_db()
-    c = conn.cursor()
-
-    if 'approved' in data:
-        c.execute(
-            "UPDATE reviews SET approved=%s WHERE id=%s",
-            (data['approved'], review_id)
-        )
-
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/reviews/<int:review_id>', methods=['DELETE'])
-def api_admin_delete_review(review_id):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("DELETE FROM reviews WHERE id=%s", (review_id,))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/profile', methods=['POST'])
-def api_admin_save_profile():
-    """Admin updates barber profile"""
-    data = request.get_json()
-    conn = get_db()
-    c = conn.cursor()
-
     c.execute('''
         UPDATE profile SET
             bio        = %s,
@@ -401,16 +296,137 @@ def api_admin_save_profile():
         data.get('instagram', ''),
         data.get('tiktok', '')
     ))
-
     conn.commit()
     conn.close()
     return jsonify({'success': True})
 
-@app.route('/api/admin/clear', methods=['POST'])
+# ─── ADMIN ROUTES ─────────────────────────────────────────────────────────────
+
+@app.route('/admin-lambocutz-secret')
+def admin():
+    return render_template('admin.html')
+
+@app.route('/api/admin/bookings', methods=['GET'])
+def api_admin_bookings():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT id, name, phone, date, time, service, price, payment, status FROM bookings ORDER BY date ASC, time ASC")
+    rows = c.fetchall()
+    
+    # Notice we translate the database column 'payment' to key string 'payment_status' for javascript layout matching
+    cols = ['id', 'name', 'phone', 'date', 'time', 'service', 'price', 'payment_status', 'status']
+    conn.close()
+    return jsonify([dict(zip(cols, row)) for row in rows])
+
+@app.route('/api/admin/bookings/<int:booking_id>/status', methods=['POST'])
+def api_update_booking_status(booking_id):
+    data = request.get_json()
+    status = data.get('status')
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE bookings SET status=%s WHERE id=%s", (status, booking_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/bookings/<int:booking_id>/payment', methods=['POST'])
+def api_update_booking_payment(booking_id):
+    data = request.get_json()
+    payment_status = data.get('payment_status')
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE bookings SET payment=%s WHERE id=%s", (payment_status, booking_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/bookings/<int:booking_id>', methods=['DELETE'])
+def api_delete_booking(booking_id):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM bookings WHERE id=%s", (booking_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/bookings/clear', methods=['POST'])
 def api_clear_bookings():
     conn = get_db()
     c = conn.cursor()
     c.execute("DELETE FROM bookings")
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/settings/hours', methods=['POST'])
+def api_save_hours():
+    data = request.get_json()
+    if 'start_hour' in data:
+        set_setting('start_hour', str(data['start_hour']))
+    if 'end_hour' in data:
+        set_setting('end_hour', str(data['end_hour']))
+    return jsonify({'success': True})
+
+@app.route('/api/settings/location', methods=['POST'])
+def api_save_location():
+    data = request.get_json()
+    if 'location' in data:
+        set_setting('location', data['location'])
+    if 'location_url' in data:
+        set_setting('location_url', data['location_url'])
+    return jsonify({'success': True})
+
+@app.route('/api/settings/dates', methods=['POST'])
+def api_save_dates():
+    data = request.get_json()
+    target_date = data.get('date')
+    action = data.get('action') # 'add' or 'remove'
+    
+    current_dates = get_available_dates()
+    if action == 'add' and target_date not in current_dates:
+        current_dates.append(target_date)
+    elif action == 'remove' and target_date in current_dates:
+        current_dates.remove(target_date)
+        
+    set_setting('available_dates', ','.join(current_dates))
+    return jsonify({'success': True})
+
+@app.route('/api/admin/reviews', methods=['GET'])
+def api_admin_reviews():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('SELECT id, name, rating, comment, photo_url, approved, created_at FROM reviews ORDER BY created_at DESC')
+    rows = c.fetchall()
+    cols = ['id', 'name', 'rating', 'comment', 'photo_url', 'approved', 'created_at']
+    conn.close()
+    
+    processed_reviews = []
+    for row in rows:
+        item = dict(zip(cols, row))
+        # Add dynamic string property to let client engine evaluate tab styles
+        item['status'] = 'approved' if item['approved'] else 'pending'
+        processed_reviews.append(item)
+        
+    return jsonify(processed_reviews)
+
+@app.route('/api/admin/reviews/<int:review_id>/status', methods=['POST'])
+def api_admin_update_review_status(review_id):
+    data = request.get_json()
+    status_str = data.get('status') # 'approved' or 'rejected'
+    is_approved = True if status_str == 'approved' else False
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE reviews SET approved=%s WHERE id=%s", (is_approved, review_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/admin/reviews/<int:review_id>', methods=['DELETE'])
+def api_admin_delete_review(review_id):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM reviews WHERE id=%s", (review_id,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
