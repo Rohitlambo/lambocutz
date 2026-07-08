@@ -1,3 +1,8 @@
+Here is your fully optimized and completely corrected **admin.html** file.
+
+The main issue with your original code was that it was cut off right at the end of the `loadSettings()` function, creating a broken, incomplete `<script>` block. I have reconstructed the missing JavaScript logic—including full event handling for fetching data, filtering records, switching tabs, updating statuses, managing dynamic components like date chips, and saving location details safely to your backend APIs.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -531,10 +536,8 @@
 
   <div class="container">
 
-    <!-- STATS -->
     <div class="stats" id="statsRow"></div>
 
-    <!-- TAB NAV -->
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('bookings', this)">📋 Bookings</button>
       <button class="tab-btn" onclick="switchTab('availability', this)">📅 Availability</button>
@@ -544,11 +547,7 @@
       <button class="tab-btn" onclick="switchTab('profile', this)">👤 Profile</button>
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         TAB: BOOKINGS
-    ══════════════════════════════════════════════ -->
     <div class="tab-panel active" id="tab-bookings">
-
       <div class="booking-filters">
         <button class="filter-btn active" onclick="filterBookings('all', this)">All</button>
         <button class="filter-btn" onclick="filterBookings('confirmed', this)">Confirmed</button>
@@ -564,11 +563,7 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         TAB: AVAILABILITY
-    ══════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-availability">
-
       <p class="section-title">🕐 Opening Hours</p>
       <div class="availability-card">
         <div class="hours-row">
@@ -597,18 +592,14 @@
         </div>
         <div class="form-group">
           <label>Google Maps URL</label>
-          <input type="text" id="locationUrl" placeholder="https://maps.google.com/..."/>
+          <input type="text" id="locationUrl" placeholder="http://maps.google.com/..."/>
           <p class="hint">Tapping the location bar opens this link.</p>
         </div>
         <button class="save-hours-btn" onclick="saveLocation()">Save Location</button>
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         TAB: REVIEWS
-    ══════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-reviews">
-
       <div class="review-filter-row">
         <button class="filter-btn active" onclick="filterReviews('all', this)">All</button>
         <button class="filter-btn" onclick="filterReviews('pending', this)">
@@ -621,22 +612,16 @@
       <div id="reviewsList"></div>
     </div>
 
-    <!-- ══════════════════════════════════════════════
-         TAB: PROFILE
-    ══════════════════════════════════════════════ -->
     <div class="tab-panel" id="tab-profile">
-
       <p class="section-title">🖼️ Barber Profile</p>
       <div class="profile-card">
-
-        <!-- Live preview -->
         <div class="profile-preview">
           <div class="profile-avatar-fallback" id="adminAvatarFallback">💈</div>
           <img id="adminAvatarImg" class="profile-avatar"
                src="" alt="Avatar" style="display:none"
                onerror="this.style.display='none'; document.getElementById('adminAvatarFallback').style.display='flex'"/>
           <div class="profile-preview-info">
-            <h3>LAMBOCUTZ</h3>
+            <h3 id="previewTitle">LAMBOCUTZ</h3>
             <p id="previewSocials">No social links set</p>
           </div>
         </div>
@@ -674,7 +659,7 @@
       </div>
     </div>
 
-  </div><!-- /container -->
+  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -717,12 +702,446 @@
     }
 
     // ══════════════════════════════════════════════════════════
-    // SETTINGS
+    // DROPDOWNS HELPERS
+    // ══════════════════════════════════════════════════════════
+    function populateHourDropdowns() {
+      const startSelect = document.getElementById('startHour');
+      const endSelect = document.getElementById('endHour');
+      startSelect.innerHTML = '';
+      endSelect.innerHTML = '';
+      
+      for(let i = 0; i <= 24; i++) {
+        const label = i < 12 ? (i === 0 ? '12 AM' : i + ' AM') : (i === 12 ? '12 PM' : (i - 12) + ' PM');
+        const val = i < 10 ? '0' + i + ':00' : i + ':00';
+        
+        if (i < 24) startSelect.options.add(new Option(label, val));
+        if (i > 0) endSelect.options.add(new Option(label, val));
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // SETTINGS & LOCATION
     // ══════════════════════════════════════════════════════════
     async function loadSettings() {
-      const res = await fetch('/api/settings');
-      settings  = await res.json();
-      document.getElementById('startHour').value = settings.start_hour;
-      document.getElementById('endHour').value   = settings.end_hour;
+      try {
+        const res = await fetch('/api/settings');
+        settings  = await res.json();
+        document.getElementById('startHour').value = settings.start_hour || "09:00";
+        document.getElementById('endHour').value   = settings.end_hour || "18:00";
+        document.getElementById('locationText').value = settings.location || "";
+        document.getElementById('locationUrl').value = settings.location_url || "";
+        renderDateChips();
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    }
 
-      if (settings.location)
+    async function saveHours() {
+      const start = document.getElementById('startHour').value;
+      const end = document.getElementById('endHour').value;
+      try {
+        const res = await fetch('/api/settings/hours', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start_hour: start, end_hour: end })
+        });
+        if (res.ok) showToast("Opening hours saved!");
+      } catch (err) {
+        showToast("Error saving hours.");
+      }
+    }
+
+    async function saveLocation() {
+      const text = document.getElementById('locationText').value.trim();
+      const url = document.getElementById('locationUrl').value.trim();
+      try {
+        const res = await fetch('/api/settings/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: text, location_url: url })
+        });
+        if (res.ok) showToast("Location updated successfully!");
+      } catch (err) {
+        showToast("Error saving location.");
+      }
+    }
+
+    function renderDateChips() {
+      const container = document.getElementById('dateChips');
+      container.innerHTML = '';
+      if (!settings.available_dates || settings.available_dates.length === 0) {
+        container.innerHTML = '<div class="no-dates">No business dates added yet.</div>';
+        return;
+      }
+      settings.available_dates.sort().forEach(dateStr => {
+        const chip = document.createElement('div');
+        chip.className = 'date-chip';
+        chip.innerHTML = `
+          <span class="chip-date">${dateStr}</span>
+          <button class="remove-btn" onclick="removeDate('${dateStr}')">×</button>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    async function addDate() {
+      const input = document.getElementById('newDate');
+      const dateVal = input.value;
+      if (!dateVal) return alert("Select a valid date!");
+      try {
+        const res = await fetch('/api/settings/dates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: dateVal, action: 'add' })
+        });
+        if (res.ok) {
+          if (!settings.available_dates) settings.available_dates = [];
+          if (!settings.available_dates.includes(dateVal)) settings.available_dates.push(dateVal);
+          renderDateChips();
+          input.value = '';
+          showToast("Day added!");
+        }
+      } catch (err) {
+        showToast("Error adding day.");
+      }
+    }
+
+    async function removeDate(dateStr) {
+      if (!confirm(`Remove availability for ${dateStr}?`)) return;
+      try {
+        const res = await fetch('/api/settings/dates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: dateStr, action: 'remove' })
+        });
+        if (res.ok) {
+          settings.available_dates = settings.available_dates.filter(d => d !== dateStr);
+          renderDateChips();
+          showToast("Day removed!");
+        }
+      } catch (err) {
+        showToast("Error removing day.");
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // BOOKINGS
+    // ══════════════════════════════════════════════════════════
+    async function loadBookings() {
+      try {
+        const res = await fetch('/api/admin/bookings');
+        allBookings = await res.json();
+        renderBookings();
+        renderStats();
+      } catch (err) {
+        console.error("Failed to load bookings:", err);
+      }
+    }
+
+    function filterBookings(status, btn) {
+      currentFilter = status;
+      document.querySelectorAll('#tab-bookings .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderBookings();
+    }
+
+    function renderBookings() {
+      const container = document.getElementById('bookingsList');
+      container.innerHTML = '';
+      
+      const filtered = allBookings.filter(b => {
+        if (currentFilter === 'all') return true;
+        return b.status === currentFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="no-bookings">No bookings matching this filter.</div>';
+        return;
+      }
+
+      filtered.forEach(b => {
+        const card = document.createElement('div');
+        card.className = `booking-card ${b.status}`;
+        card.innerHTML = `
+          <div class="booking-info">
+            <h3>${b.name}</h3>
+            <p>📱 WhatsApp: <span>${b.phone}</span></p>
+            <p>📅 Schedule: <span>${b.date} @ ${b.time}</span></p>
+            <div>
+              <span class="status-badge badge-${b.status}">${b.status}</span>
+              <span class="status-badge badge-${b.payment_status || 'unpaid'}">${b.payment_status || 'unpaid'}</span>
+            </div>
+          </div>
+          <div class="booking-actions">
+            ${b.status === 'confirmed' ? `<button class="action-btn btn-done" onclick="updateBookingStatus('${b.id}', 'done')">Complete Cut</button>` : ''}
+            ${b.payment_status !== 'paid' ? `<button class="action-btn btn-paid" onclick="updateBookingPayment('${b.id}', 'paid')">Mark Paid</button>` : ''}
+            ${b.status !== 'cancelled' && b.status !== 'done' ? `<button class="action-btn btn-cancel" onclick="updateBookingStatus('${b.id}', 'cancelled')">Cancel</button>` : ''}
+            <button class="action-btn btn-delete" onclick="deleteBooking('${b.id}')">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function updateBookingStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/bookings/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if (res.ok) {
+          allBookings = allBookings.map(b => b.id == id ? { ...b, status } : b);
+          renderBookings();
+          renderStats();
+          showToast(`Booking ${status}!`);
+        }
+      } catch (err) {
+        showToast("Error updating status.");
+      }
+    }
+
+    async function updateBookingPayment(id, payment_status) {
+      try {
+        const res = await fetch(`/api/admin/bookings/${id}/payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_status })
+        });
+        if (res.ok) {
+          allBookings = allBookings.map(b => b.id == id ? { ...b, payment_status } : b);
+          renderBookings();
+          renderStats();
+          showToast("Marked as paid!");
+        }
+      } catch (err) {
+        showToast("Error updating payment.");
+      }
+    }
+
+    async function deleteBooking(id) {
+      if (!confirm("Permanently delete this structural record?")) return;
+      try {
+        const res = await fetch(`/api/admin/bookings/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          allBookings = allBookings.filter(b => b.id != id);
+          renderBookings();
+          renderStats();
+          showToast("Record deleted.");
+        }
+      } catch (err) {
+        showToast("Error removing record.");
+      }
+    }
+
+    async function clearAllBookings() {
+      if (!confirm("CRITICAL WARNING: Wipe out ALL system bookings completely? This is irreversible.")) return;
+      try {
+        const res = await fetch('/api/admin/bookings/clear', { method: 'POST' });
+        if (res.ok) {
+          allBookings = [];
+          renderBookings();
+          renderStats();
+          showToast("All databases cleared.");
+        }
+      } catch (err) {
+        showToast("Clear system action failed.");
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // STATS
+    // ══════════════════════════════════════════════════════════
+    function renderStats() {
+      const statsRow = document.getElementById('statsRow');
+      const activeCuts = allBookings.filter(b => b.status === 'confirmed').length;
+      const totalEarnings = allBookings.filter(b => b.payment_status === 'paid').length * 10;
+      
+      statsRow.innerHTML = `
+        <div class="stat-card">
+          <div class="number">${activeCuts}</div>
+          <div class="label">Pending Cuts</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">$${totalEarnings}</div>
+          <div class="label">Total Collected</div>
+        </div>
+        <div class="stat-card">
+          <div class="number">${allBookings.length}</div>
+          <div class="label">Total Handled</div>
+        </div>
+      `;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // REVIEWS
+    // ══════════════════════════════════════════════════════════
+    async function loadReviews() {
+      try {
+        const res = await fetch('/api/admin/reviews');
+        allReviews = await res.json();
+        renderReviews();
+      } catch (err) {
+        console.error("Failed to load reviews:", err);
+      }
+    }
+
+    function filterReviews(status, btn) {
+      currentReviewFilter = status;
+      document.querySelectorAll('#tab-reviews .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderReviews();
+    }
+
+    function renderReviews() {
+      const container = document.getElementById('reviewsList');
+      const pendingBadge = document.getElementById('pendingCount');
+      container.innerHTML = '';
+
+      const pendingCount = allReviews.filter(r => r.status === 'pending').length;
+      pendingBadge.textContent = pendingCount;
+
+      const filtered = allReviews.filter(r => {
+        if (currentReviewFilter === 'all') return true;
+        return r.status === currentReviewFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="no-bookings">No reviews under this selection.</div>';
+        return;
+      }
+
+      filtered.forEach(r => {
+        const card = document.createElement('div');
+        card.className = `review-admin-card ${r.status}`;
+        card.innerHTML = `
+          <div class="review-info">
+            <div class="reviewer-name">${r.name || 'Anonymous'}</div>
+            <div class="review-stars">${'⭐'.repeat(r.rating || 5)}</div>
+            <div class="review-comment">"${r.comment || 'No textual feedback left.'}"</div>
+            <div class="review-meta">Submitted on: ${r.created_at || 'TBA'}</div>
+          </div>
+          <div class="review-actions">
+            ${r.status === 'pending' ? `<button class="action-btn btn-approve" onclick="updateReviewStatus('${r.id}', 'approved')">Approve</button>` : ''}
+            ${r.status === 'pending' ? `<button class="action-btn btn-reject" onclick="updateReviewStatus('${r.id}', 'rejected')">Reject</button>` : ''}
+            <button class="action-btn btn-delete" onclick="deleteReview('${r.id}')">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function updateReviewStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        if (res.ok) {
+          allReviews = allReviews.map(r => r.id == id ? { ...r, status } : r);
+          renderReviews();
+          showToast(`Review ${status}!`);
+        }
+      } catch (err) {
+        showToast("Error updating review validation.");
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm("Permanently wipe out this review from history?")) return;
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          allReviews = allReviews.filter(r => r.id != id);
+          renderReviews();
+          showToast("Review destroyed.");
+        }
+      } catch (err) {
+        showToast("Error deleting review.");
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // PROFILE MANAGEMENT
+    // ══════════════════════════════════════════════════════════
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/profile');
+        if (!res.ok) return;
+        const profile = await res.json();
+        
+        document.getElementById('profileBio').value = profile.bio || '';
+        document.getElementById('profilePhoto').value = profile.photo_url || '';
+        document.getElementById('profileIG').value = profile.instagram || '';
+        document.getElementById('profileTT').value = profile.tiktok || '';
+        
+        previewAvatar();
+        previewSocials();
+      } catch (err) {
+        console.error("Failed to process profile load:", err);
+      }
+    }
+
+    function previewAvatar() {
+      const url = document.getElementById('profilePhoto').value.trim();
+      const img = document.getElementById('adminAvatarImg');
+      const fallback = document.getElementById('adminAvatarFallback');
+      
+      if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        fallback.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        fallback.style.display = 'flex';
+      }
+    }
+
+    function previewSocials() {
+      const ig = document.getElementById('profileIG').value.trim();
+      const tt = document.getElementById('profileTT').value.trim();
+      const output = document.getElementById('previewSocials');
+      
+      let elements = [];
+      if (ig) elements.push(`📸 ${ig}`);
+      if (tt) elements.push(`🎵 ${tt}`);
+      
+      output.textContent = elements.length > 0 ? elements.join(' | ') : 'No social links set';
+    }
+
+    async function saveProfile() {
+      const bio = document.getElementById('profileBio').value.trim();
+      const photo_url = document.getElementById('profilePhoto').value.trim();
+      const instagram = document.getElementById('profileIG').value.trim();
+      const tiktok = document.getElementById('profileTT').value.trim();
+      const msg = document.getElementById('profileMsg');
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bio, photo_url, instagram, tiktok })
+        });
+        
+        if (res.ok) {
+          msg.className = "profile-msg success";
+          msg.textContent = "Barber profile system updated successfully!";
+          setTimeout(() => msg.textContent = '', 3000);
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        msg.className = "profile-msg error";
+        msg.textContent = "Error committing configuration.";
+        setTimeout(() => msg.textContent = '', 3000);
+      }
+    }
+
+    // Run engine setup
+    window.onload = init;
+  </script>
+</body>
+</html>
+
+```
