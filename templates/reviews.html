@@ -501,13 +501,20 @@
 
             if (data.success) {
                 msg.className = 'form-msg success';
-                msg.textContent = '✅ Thanks! Your review is awaiting approval.';
+                // Updated text line:
+                msg.textContent = '✅ Thanks! Your review has been posted successfully.'; 
+                
+                // Clear out form inputs
                 document.getElementById('reviewName').value = '';
                 document.getElementById('reviewComment').value = '';
                 fileInput.value = '';
                 document.getElementById('photoPreview').style.display = 'none';
                 selectedRating = 0;
                 highlightStars(0);
+                
+                // Optional: Refresh the timeline instantly so they see it right away
+                loadReviews(); 
+            }
             } else {
                 msg.className = 'form-msg error';
                 msg.textContent = data.error || 'Something went wrong.';
