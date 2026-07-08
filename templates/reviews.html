@@ -168,6 +168,45 @@
             border-color: #c9a84c;
         }
 
+        /* ── CAMERA / FILE INPUT ── */
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #1a1a1a;
+            border: 1px dashed #c9a84c;
+            padding: 12px;
+            border-radius: 10px;
+            color: #c9a84c;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .file-label:hover {
+            background: #222;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            max-height: 150px;
+            border-radius: 8px;
+            display: none;
+            object-fit: cover;
+            border: 1px solid #333;
+        }
+
         /* ── STAR SELECTOR ── */
         .star-selector {
             display: flex;
@@ -274,6 +313,16 @@
             color: #aaa;
             font-size: 0.9rem;
             line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .review-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #222;
+            margin-top: 8px;
         }
 
         .no-reviews {
@@ -305,13 +354,11 @@
 </head>
 <body>
 
-    <!-- HEADER -->
     <div class="header">
         <a href="/" class="back-btn">← Back</a>
         <h1>⭐ REVIEWS</h1>
     </div>
 
-    <!-- STATS BAR -->
     <div class="stats-bar">
         <div class="overall-rating" id="overallRating">–</div>
         <div class="overall-stars" id="overallStars">☆☆☆☆☆</div>
@@ -319,7 +366,6 @@
         <div class="rating-bars" id="ratingBars"></div>
     </div>
 
-    <!-- WRITE A REVIEW -->
     <div class="write-section">
         <div class="section-title">✍️ Leave a Review</div>
         <div class="review-form">
@@ -340,9 +386,19 @@
             </div>
 
             <div class="form-group">
+                <label>Add a Photo <span style="color:#555">(optional)</span></label>
+                <div class="file-upload-wrapper">
+                    <label for="reviewPhoto" class="file-label">
+                        📸 Take or Upload Photo
+                    </label>
+                    <input type="file" id="reviewPhoto" class="file-input" accept="image/*" onchange="previewImage(event)">
+                </div>
+                <img id="photoPreview" class="image-preview" alt="Haircut preview">
+            </div>
+
+            <div class="form-group">
                 <label>Comment <span style="color:#555">(optional)</span></label>
-                <textarea id="reviewComment" rows="3"
-                    placeholder="How was your experience?"></textarea>
+                <textarea id="reviewComment" rows="3" placeholder="How was your experience?"></textarea>
             </div>
 
             <button class="submit-btn" id="submitBtn" onclick="submitReview()">
@@ -352,7 +408,6 @@
         </div>
     </div>
 
-    <!-- REVIEWS LIST -->
     <div class="reviews-section">
         <div class="section-title">💬 What Clients Say</div>
         <hr class="divider">
@@ -384,10 +439,26 @@
         });
     }
 
+    // ── IMAGE PREVIEW LOGIC ────────────────────────────────────────────────
+    function previewImage(event) {
+        const reader = new FileReader();
+        const preview = document.getElementById('photoPreview');
+        
+        reader.onload = function() {
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        }
+        
+        if(event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+
     // ── SUBMIT REVIEW ──────────────────────────────────────────────────────
     async function submitReview() {
         const name    = document.getElementById('reviewName').value.trim();
         const comment = document.getElementById('reviewComment').value.trim();
+        const fileInput = document.getElementById('reviewPhoto');
         const btn     = document.getElementById('submitBtn');
         const msg     = document.getElementById('formMsg');
 
@@ -408,11 +479,21 @@
         btn.disabled = true;
         btn.textContent = 'Submitting...';
 
+        // NOTE: Instead of sending raw JSON, we use FormData to easily carry files to your backend.
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('rating', selectedRating);
+        formData.append('comment', comment);
+        
+        if (fileInput.files[0]) {
+            formData.append('photo', fileInput.files[0]);
+        }
+
         try {
             const res = await fetch('/api/reviews', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, rating: selectedRating, comment })
+                // Content-Type header must be omitted when sending FormData so the browser formats it correctly
+                body: formData 
             });
             const data = await res.json();
 
@@ -421,6 +502,8 @@
                 msg.textContent = '✅ Thanks! Your review is awaiting approval.';
                 document.getElementById('reviewName').value = '';
                 document.getElementById('reviewComment').value = '';
+                fileInput.value = '';
+                document.getElementById('photoPreview').style.display = 'none';
                 selectedRating = 0;
                 highlightStars(0);
             } else {
@@ -517,9 +600,8 @@
                         <span class="review-date">${date}</span>
                     </div>
                     <div class="review-stars">${starsHTML(r.rating)}</div>
-                    ${r.comment
-                        ? `<div class="review-comment">"${escapeHTML(r.comment)}"</div>`
-                        : ''}
+                    ${r.comment ? `<div class="review-comment">"${escapeHTML(r.comment)}"</div>` : ''}
+                    ${r.image_url ? `<img src="${r.image_url}" class="review-image" alt="${escapeHTML(r.name)}'s haircut">` : ''}
                 </div>`;
         }).join('');
     }
